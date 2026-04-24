@@ -1,0 +1,69 @@
+Here is the English version of the explanation I gave you about the video:
+
+This video is an economics analysis that discusses how, in the digital age, **ownership** is “quietly dying” and how this creates a new kind of economic dependence or new slavery.
+
+## Basic info about the video
+- Channel: “Kayıt Dışı İktisat” – Ceyhun Elgin  
+- Main theme: How ownership is weakening, and how subscription economy and planned obsolescence erode the middle class’s ability to accumulate wealth.  
+
+## Main concepts and mechanisms
+The video explains three mechanisms through which ownership is dissolving: shrinkflation, the subscription economy, and planned obsolescence.
+
+1. Shrinkflation and skimpflation  
+   - Shrinkflation: The price stays the same while the amount of product decreases (for example, a 400 g package becomes 350 g).  
+   - Skimpflation: The price stays the same while the quality of the product or service falls (less meat, weaker ingredients, fewer services, less cleaning, etc.).  
+   - These changes don’t fully show up in official inflation numbers and invisibly reduce the purchasing power of especially low‑income households.  
+
+2. Subscription economy  
+   - The shift from “owning” to “accessing” is described: Spotify, Netflix, e‑books, cloud storage, software, and similar services disappear the moment you stop paying.  
+   - Small monthly payments (“drip pricing”) add up to large amounts over time, and people systematically underestimate this total cost.  
+   - “Zombie subscribers”: People who hardly use the service but do not cancel; they are an important source of profit for companies.  
+   - This model prevents wealth accumulation and turns life into a system where you continuously pay but do not build up assets you truly own.  
+
+3. Planned obsolescence and digital rights  
+   - The historical roots are linked to the Great Depression of the 1930s, when the idea of designing products with a built‑in “death date” appeared.  
+   - Examples: Non‑replaceable batteries, phones slowed down with updates, repair being blocked, and the use of DRM so that usage is controlled by license terms.  
+   - Legally the device is yours, but in practice the company keeps control, which empties out the real meaning of property rights.  
+
+## Theoretical and ideological frame
+The speaker refers to several thinkers to frame what is happening.
+
+- Marx: Argues that in the 21st century expropriation happens not by force but “voluntarily,” wrapped in language of flexibility and convenience.  
+- Hayek: Emphasizes that property rights are a basic guarantee of individual freedom.  
+- Veblen: Says we moved from conspicuous consumption to a kind of “conspicuous‑less dependence,” where people spend but do not even gain status.  
+- Polanyi: When markets transform property relations too far, society develops defensive reactions; “right to repair” movements are given as an example.  
+
+The core claim: From both a free‑market and a structural‑critical perspective, the emerging model ends up weakening the individual’s position.
+
+## Policy examples and possible solutions
+The video offers both individual and structural ideas for solutions.
+
+Individual level:  
+- Check unit prices.  
+- Track your subscriptions and cancel the ones you don’t really use.  
+- Support and use repair instead of replacement where possible, and defend the right to repair.  
+
+Regulation and policy level:  
+- France’s rule that forces companies to inform consumers when product weight/size is reduced.  
+- South Korea’s fines on producers that change product size without clearly informing consumers.  
+- The EU’s right‑to‑repair directive and California’s right‑to‑repair law (SB244).  
+- Legislative attempts in the US to limit shrinkflation and efforts by regulators to tackle hidden fees.  
+
+Alternative models:  
+- Cooperatives, open‑source software, community‑supported agriculture, “repair cafés,” and similar initiatives are presented as practices that bring the idea of ownership back to communities.  
+
+## Where the video lands
+At the end, the speaker invites viewers to question their own lives: In the last 10 years, have the assets you truly own increased, or only the number of services you can access and the list of monthly payments you make?  
+The answer to this, he argues, will largely shape the class structure of the future and the divide between “those who own” and “those who rent.”  
+
+If you would like, I can now turn this into a very short summary in English (3–4 bullet points) or focus only on one part, such as subscriptions or planned obsolescence.
+
+Sources
+[1] Shrinkflation - Wikipedia https://en.wikipedia.org/wiki/Shrinkflation
+[2] Understanding Shrinkflation: Causes, Examples, and How to Identify It https://www.investopedia.com/terms/s/shrinkflation.asp
+[3] What Is Shrinkflation? Why Shoppers Are Getting Less for Their Dollar https://entrepreneurship.babson.edu/what-is-shrinkflation/
+[4] Shrinkflation - Definition, Causes, Effects, Examples https://corporatefinanceinstitute.com/resources/economics/shrinkflation/
+[5] What Is Shrinkflation? Examples & Effects on the Economy - Britannica https://www.britannica.com/money/what-is-shrinkflation
+[6] 'shrinkflation': meaning and origin - word histories https://wordhistories.net/2023/09/09/shrinkflation/
+[7] Shrinkflation - A Phenomenon to know about. - LinkedIn https://www.linkedin.com/pulse/shrinkflation-phenomenon-know-dr-anuradha-yadav
+[8] What is shrinkflation? - Ellisphere https://www.ellisphere.com/en/shrinkflation/
