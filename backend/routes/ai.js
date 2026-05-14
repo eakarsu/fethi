@@ -263,4 +263,93 @@ Provide a clear, structured, and helpful response. Use sections with bold header
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Audit-driven addition: "Predictive booking success (availability optimization, pricing)".
+router.post('/predict-booking-success', authenticateToken, async (req, res) => {
+  try {
+    const { listing, recentInquiries, market, period } = req.body;
+    if (!listing) {
+      return res.status(400).json({ error: 'listing is required' });
+    }
+
+    const prompt = `You are a rental-marketplace booking analyst. Predict the probability that this listing achieves at least one paid booking in the requested period.
+
+Listing:
+${JSON.stringify(listing, null, 2)}
+
+Recent inquiries (sample):
+${JSON.stringify(recentInquiries || [], null, 2)}
+
+Market context: ${market || 'unspecified'}
+Period: ${period || 'next 30 days'}
+
+Respond with strict JSON only:
+{"booking_probability": <0-1 number>, "expected_bookings": <integer>, "drivers": [<strings>], "risks": [<strings>], "recommended_pricing_change_pct": <number>, "recommended_actions": [<strings>]}`;
+
+    const result = await callOpenRouter(prompt);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Audit-driven addition: "Host reliability prediction".
+router.post('/host-reliability', authenticateToken, async (req, res) => {
+  try {
+    const { host, recentBookings, reviews, disputes } = req.body;
+    if (!host) {
+      return res.status(400).json({ error: 'host is required' });
+    }
+
+    const prompt = `You are a rental-marketplace trust analyst. Predict a host's 90-day reliability trajectory.
+
+Host:
+${JSON.stringify(host, null, 2)}
+
+Recent bookings:
+${JSON.stringify(recentBookings || [], null, 2)}
+
+Reviews (sample):
+${JSON.stringify((reviews || []).slice(0, 50), null, 2)}
+
+Disputes:
+${JSON.stringify(disputes || [], null, 2)}
+
+Respond with strict JSON only:
+{"reliability_score_now": <0-100>, "predicted_score_in_90d": <0-100>, "trend": "improving|stable|declining", "risk_signals": [<strings>], "growth_signals": [<strings>], "recommended_interventions": [<strings>]}`;
+
+    const result = await callOpenRouter(prompt);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Audit-driven addition: "Auto-respond to inquiries with AI".
+router.post('/auto-respond', authenticateToken, async (req, res) => {
+  try {
+    const { listing, inquiry, hostStyle } = req.body;
+    if (!inquiry || !inquiry.message) {
+      return res.status(400).json({ error: 'inquiry.message is required' });
+    }
+
+    const prompt = `You are drafting a host's reply to a renter inquiry. Be friendly, specific, and propose a concrete next step.
+
+Listing:
+${JSON.stringify(listing || {}, null, 2)}
+
+Inquiry from renter:
+"${inquiry.message}"
+
+Host preferred style/tone (optional): ${hostStyle || 'professional, warm, concise'}
+
+Respond with strict JSON only:
+{"reply_text": <string>, "suggested_actions": [<strings>], "confidence": "low|medium|high", "needs_human_review": <boolean>, "reason_for_review": <string-or-null>}`;
+
+    const result = await callOpenRouter(prompt);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
