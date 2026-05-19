@@ -36,6 +36,7 @@ const sections = [
     title: 'Account',
     links: [
       { to: '/profile', label: 'My Profile', icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>) },
+      { to: '/custom-views', label: 'Views', icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><path d="M3 14h7v7H3z"/><path d="M14 14h7v7h-7z"/></svg>) },
     ],
   },
 ];
