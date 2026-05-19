@@ -18,11 +18,21 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
+app.use('/api/custom', require('./routes/customFeatures'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// // === Batch 09 Gaps & Frontend Mounts ===
+app.use('/api/gap-ai-fethi', require('./routes/batch09GapAi')); // // === Batch 09 Gaps & Frontend Mounts ===
+app.use('/api/gap-nonai-fethi', require('./routes/batch09GapNonai')); // // === Batch 09 Gaps & Frontend Mounts ===
+
+// // === Custom Views feature mount (must precede any 404 handler) ===
+app.use('/api/custom-views', require('./routes/customViews'));
+
 app.listen(PORT, () => {
   console.log(`Rental Marketplace API running on http://localhost:${PORT}`);
 });
+
+
