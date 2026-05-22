@@ -16,6 +16,11 @@ import Navbar from './components/Navbar';
 import ServiceDashboard from './pages/ServiceDashboard';
 import CustomViewsPage from './pages/CustomViewsPage';
 
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
+import TimelineView from './pages/TimelineView';
+
 // // === Batch 09 Gaps & Frontend Mounts ===
 const PredictiveBookingSuccessAvailabilityPricingCfs = React.lazy(() => import('./pages/Batch09/PredictiveBookingSuccessAvailabilityPricingCfs'));
 const HostReliabilityPredictionCfs = React.lazy(() => import('./pages/Batch09/HostReliabilityPredictionCfs'));
@@ -56,6 +61,10 @@ export default function App() {
     <>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#f1f5f9', border: '1px solid #334155' } }} />
       <Routes>
+        <Route path="/insights/timeline" element={<TimelineView />} />
+        <Route path="/codex/custom-viz" element={<CodexCustomVizFeature />} />
+        <Route path="/codex/operations" element={<CodexOperationsFeature />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Protected><AppLayout><Dashboard /></AppLayout></Protected>} />
         <Route path="/browse" element={<Protected><AppLayout><Browse /></AppLayout></Protected>} />
