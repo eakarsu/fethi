@@ -28,7 +28,7 @@ router.get('/my-listings', authenticateToken, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// GET all bookings
+// GET bookings visible to the authenticated party
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -38,7 +38,9 @@ router.get('/', authenticateToken, async (req, res) => {
        JOIN listings l ON b.listing_id = l.id
        JOIN users owner ON b.owner_id = owner.id
        JOIN users renter ON b.renter_id = renter.id
-       ORDER BY b.created_at DESC`
+       WHERE b.owner_id=$1 OR b.renter_id=$1
+       ORDER BY b.created_at DESC`,
+      [req.user.id]
     );
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -55,7 +57,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
        JOIN listings l ON b.listing_id = l.id
        JOIN users owner ON b.owner_id = owner.id
        JOIN users renter ON b.renter_id = renter.id
-       WHERE b.id = $1`, [req.params.id]
+       WHERE b.id = $1 AND (b.owner_id=$2 OR b.renter_id=$2)`, [req.params.id, req.user.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
     res.json(result.rows[0]);
@@ -66,9 +68,21 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { listing_id, start_date, end_date, message } = req.body;
+    const start = new Date(`${start_date}T00:00:00Z`);
+    const end = new Date(`${end_date}T00:00:00Z`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+      return res.status(400).json({ error: 'end_date must be after start_date' });
+    }
     const listing = await pool.query('SELECT * FROM listings WHERE id = $1', [listing_id]);
     if (listing.rows.length === 0) return res.status(404).json({ error: 'Listing not found' });
     const l = listing.rows[0];
+    if (Number(l.user_id) === Number(req.user.id)) return res.status(400).json({ error: 'Owners cannot book their own listing' });
+    const overlap = await pool.query(
+      `SELECT 1 FROM bookings WHERE listing_id=$1 AND status IN ('pending','confirmed')
+       AND start_date < $3 AND end_date > $2 LIMIT 1`,
+      [listing_id, start_date, end_date]
+    );
+    if (overlap.rows.length) return res.status(409).json({ error: 'Listing is unavailable for those dates' });
     const days = Math.ceil((new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24));
     const total_price = days * parseFloat(l.price_per_day);
     const result = await pool.query(
@@ -85,6 +99,18 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { status } = req.body;
+    if (!['confirmed', 'cancelled', 'completed'].includes(status)) return res.status(400).json({ error: 'Invalid booking status' });
+    const existing = await pool.query('SELECT * FROM bookings WHERE id=$1', [req.params.id]);
+    if (!existing.rows[0]) return res.status(404).json({ error: 'Booking not found' });
+    const bookingBefore = existing.rows[0];
+    const isOwner = Number(bookingBefore.owner_id) === Number(req.user.id);
+    const isRenter = Number(bookingBefore.renter_id) === Number(req.user.id);
+    if ((!isOwner && !isRenter) || (status === 'confirmed' && !isOwner) || (status === 'completed' && !isOwner)) {
+      return res.status(403).json({ error: 'Booking status change not permitted' });
+    }
+    if (bookingBefore.status === 'cancelled' || bookingBefore.status === 'completed') {
+      return res.status(409).json({ error: 'Terminal booking status cannot be changed' });
+    }
     const result = await pool.query(
       'UPDATE bookings SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING *',
       [status, req.params.id]
@@ -102,7 +128,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // DELETE booking
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM bookings WHERE id=$1 RETURNING *', [req.params.id]);
+    const result = await pool.query(
+      `DELETE FROM bookings WHERE id=$1 AND renter_id=$2 AND status='pending' RETURNING *`,
+      [req.params.id, req.user.id]
+    );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
     res.json({ message: 'Booking deleted' });
   } catch (err) { res.status(500).json({ error: err.message }); }

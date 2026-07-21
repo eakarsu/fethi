@@ -1,16 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
-
-const aiTabs = [
-  { id: 'review', label: 'AI Review', icon: '⭐', endpoint: '/api/ai/review-product', desc: 'Get a detailed AI-generated review with pros, cons, and verdict' },
-  { id: 'analyze', label: 'Analyze', icon: '🔍', endpoint: '/api/ai/analyze-listing', desc: 'Get optimization tips and listing score' },
-  { id: 'tips', label: 'Rental Tips', icon: '💡', endpoint: '/api/ai/rental-tips', desc: 'Get expert tips for renting this type of item' },
-  { id: 'recommend', label: 'Smart Advice', icon: '🎯', endpoint: '/api/ai/smart-recommend', desc: 'Get recommendations and alternatives' },
-  { id: 'compare', label: 'Compare', icon: '⚖️', endpoint: '/api/ai/compare-listings', desc: 'Compare this with similar listings' },
-];
 
 export default function Browse() {
   const { category: urlCat } = useParams();
@@ -18,16 +9,11 @@ export default function Browse() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState(null);
-  const [aiTab, setAiTab] = useState('review');
-  const [aiResults, setAiResults] = useState({});
-  const [aiLoading, setAiLoading] = useState(false);
   const [bookModal, setBookModal] = useState(false);
   const [bookData, setBookData] = useState({ start_date: '', end_date: '', message: '' });
   const [saving, setSaving] = useState(false);
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [compareItems, setCompareItems] = useState([]);
-  const [compareMode, setCompareMode] = useState(false);
 
   // Filter state
   const [filterOptions, setFilterOptions] = useState(null);
@@ -184,19 +170,10 @@ export default function Browse() {
   };
 
   const openDetail = async (item) => {
-    if (compareMode) {
-      setCompareItems(prev => {
-        const exists = prev.find(i => i.id === item.id);
-        if (exists) return prev.filter(i => i.id !== item.id);
-        if (prev.length >= 3) { toast.error('Max 3 items for comparison'); return prev; }
-        return [...prev, item];
-      });
-      return;
-    }
     try {
       const res = await apiFetch(`/api/listings/${item.id}`);
       const detail = await res.json();
-      setSel(detail); setAiResults({}); setAiTab('review');
+      setSel(detail);
       setShowReviewForm(false); setEditingReview(null);
       setReviewRating(5); setReviewComment('');
       setPlans([]); setSelectedPlan(null);
@@ -243,36 +220,6 @@ export default function Browse() {
   };
 
   const startEditReview = (rev) => { setEditingReview(rev); setReviewRating(rev.rating); setReviewComment(rev.comment); setShowReviewForm(true); };
-
-  const runAi = async (tabId) => {
-    if (aiResults[tabId]) { setAiTab(tabId); return; }
-    setAiTab(tabId); setAiLoading(true);
-    try {
-      const tab = aiTabs.find(t => t.id === tabId);
-      let body;
-      if (tabId === 'compare') {
-        const sameCategory = items.filter(i => i.category === sel.category && i.id !== sel.id).slice(0, 2);
-        body = JSON.stringify({ items: [sel, ...sameCategory] });
-      } else { body = JSON.stringify({ item: sel }); }
-      const res = await apiFetch(tab.endpoint, { method: 'POST', body });
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content || data.error?.message || 'No response. Check OPENROUTER_API_KEY.';
-      setAiResults(prev => ({ ...prev, [tabId]: content }));
-    } catch { setAiResults(prev => ({ ...prev, [tabId]: 'AI request failed. Please try again.' })); }
-    finally { setAiLoading(false); }
-  };
-
-  const runCompare = async () => {
-    if (compareItems.length < 2) { toast.error('Select at least 2 items to compare'); return; }
-    setSel(compareItems[0]); setAiTab('compare'); setAiLoading(true); setAiResults({}); setReviews([]);
-    try {
-      const res = await apiFetch('/api/ai/compare-listings', { method: 'POST', body: JSON.stringify({ items: compareItems }) });
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content || data.error?.message || 'No response.';
-      setAiResults({ compare: content });
-    } catch { setAiResults({ compare: 'AI comparison failed.' }); }
-    finally { setAiLoading(false); setCompareMode(false); setCompareItems([]); }
-  };
 
   const toggleFav = async (lid, e) => {
     if (e) e.stopPropagation();
@@ -631,7 +578,7 @@ export default function Browse() {
 
   return (
     <div className="page browse-page">
-      {/* Top Bar: Search + Sort + Compare */}
+      {/* Top Bar: Search + Sort */}
       <div className="browse-top-bar">
         <div className="browse-top-left">
           <button className="btn btn-s btn-sm filter-mobile-btn" onClick={() => setMobileSidebar(true)}>
@@ -642,11 +589,6 @@ export default function Browse() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search listings..." />
             <button type="submit" className="btn btn-p btn-sm">Search</button>
           </form>
-        </div>
-        <div className="browse-top-right">
-          <button className={`btn ${compareMode ? 'btn-o' : 'btn-s'} btn-sm`} onClick={() => { setCompareMode(!compareMode); setCompareItems([]); }}>
-            ⚖️ {compareMode ? 'Cancel' : 'Compare'}
-          </button>
         </div>
       </div>
 
@@ -665,24 +607,6 @@ export default function Browse() {
           </div>
         )}
       </div>
-
-      {compareMode && (
-        <div className="compare-bar">
-          <div className="compare-bar-info">
-            <span className="compare-bar-icon">⚖️</span>
-            <span>Select 2-3 items to compare — <strong>{compareItems.length}</strong> selected</span>
-          </div>
-          <div className="compare-bar-items">
-            {compareItems.map(item => (
-              <span key={item.id} className="compare-chip">
-                {item.title.slice(0, 20)}{item.title.length > 20 ? '...' : ''}
-                <button onClick={() => setCompareItems(prev => prev.filter(i => i.id !== item.id))}>✕</button>
-              </span>
-            ))}
-          </div>
-          {compareItems.length >= 2 && <button className="btn btn-purple btn-sm" onClick={runCompare}>🤖 Compare with AI</button>}
-        </div>
-      )}
 
       {/* Main Layout: Sidebar + Grid */}
       <div className="browse-layout">
@@ -706,8 +630,7 @@ export default function Browse() {
               {items.map(item => {
                 const itemRevs = cardReviews[item.id] || [];
                 return (
-                  <div key={item.id} className={`card ${compareMode ? 'card-compare' : ''} ${compareItems.find(i => i.id === item.id) ? 'card-selected' : ''}`} onClick={() => openDetail(item)}>
-                    {compareMode && <div className="card-check">{compareItems.find(i => i.id === item.id) ? '☑' : '☐'}</div>}
+                  <div key={item.id} className="card" onClick={() => openDetail(item)}>
                     <div className="card-top">
                       <h4>{item.title}</h4>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -872,26 +795,6 @@ export default function Browse() {
                 )}
               </div>
 
-              {/* AI Section */}
-              <div className="ai-section-detail">
-                <div className="ai-section-header">
-                  <h3>🤖 AI-Powered Insights</h3>
-                  <span className="ai-badge">Powered by AI</span>
-                </div>
-                <div className="ai-tabs">
-                  {aiTabs.map(tab => (
-                    <button key={tab.id} className={`ai-tab ${aiTab === tab.id ? 'active' : ''} ${aiResults[tab.id] ? 'has-result' : ''}`} onClick={() => runAi(tab.id)} disabled={aiLoading && aiTab !== tab.id} title={tab.desc}>
-                      <span className="ai-tab-icon">{tab.icon}</span>
-                      <span className="ai-tab-label">{tab.label}</span>
-                      {aiResults[tab.id] && <span className="ai-tab-check">✓</span>}
-                    </button>
-                  ))}
-                </div>
-                <div className="ai-tab-desc">{aiTabs.find(t => t.id === aiTab)?.desc}</div>
-                {!aiResults[aiTab] && !aiLoading && <button className="btn btn-purple" onClick={() => runAi(aiTab)} style={{ marginTop: '.75rem' }}>{aiTabs.find(t => t.id === aiTab)?.icon} Generate {aiTabs.find(t => t.id === aiTab)?.label}</button>}
-                {aiLoading && !aiResults[aiTab] && <div className="ai-load"><div className="spinner"></div><span>AI is generating {aiTabs.find(t => t.id === aiTab)?.label.toLowerCase()}...</span></div>}
-                {aiResults[aiTab] && <div className="ai-box"><ReactMarkdown>{aiResults[aiTab]}</ReactMarkdown></div>}
-              </div>
             </div>
             <div className="modal-f">
               <button className="btn btn-g btn-sm" onClick={() => setBookModal(true)}>📅 Book Now</button>

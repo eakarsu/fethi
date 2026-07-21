@@ -259,11 +259,14 @@ router.post('/requests/:id/updates', authenticateToken, async (req, res) => {
     );
     // If status change included, update the request too
     if (new_status) {
-      const statusUpdates = [`status='${new_status}'`, 'updated_at=NOW()'];
+      if (!['open', 'in_progress', 'resolved', 'closed'].includes(new_status)) {
+        return res.status(400).json({ error: 'Invalid request status' });
+      }
+      const statusUpdates = ['status=$2', 'updated_at=NOW()'];
       if (new_status === 'in_progress') statusUpdates.push('assigned_at=NOW()');
       if (new_status === 'resolved') statusUpdates.push('resolved_at=NOW()');
       if (new_status === 'closed') statusUpdates.push('closed_at=NOW()');
-      await pool.query(`UPDATE service_requests SET ${statusUpdates.join(',')} WHERE id=$1`, [req.params.id]);
+      await pool.query(`UPDATE service_requests SET ${statusUpdates.join(',')} WHERE id=$1`, [req.params.id, new_status]);
     }
     // Notify the other party
     const r = request.rows[0];

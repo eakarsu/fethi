@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
 
 const catOptions = ['Properties', 'Vehicles', 'Electronics', 'Tools & Equipment', 'Sports & Outdoor', 'Event & Party'];
@@ -16,8 +15,6 @@ export default function MyListings() {
   const [edit, setEdit] = useState(null);
   const [fd, setFd] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
-  const [aiResult, setAiResult] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
 
   // Plans state
   const [plans, setPlans] = useState([]);
@@ -97,28 +94,6 @@ export default function MyListings() {
     } catch { toast.error('Failed to delete plan'); }
   };
 
-  const suggestPrice = async () => {
-    setAiLoading(true); setAiResult('');
-    try {
-      const res = await apiFetch('/api/ai/suggest-price', { method: 'POST', body: JSON.stringify(fd) });
-      const data = await res.json();
-      setAiResult(data.choices?.[0]?.message?.content || 'No response. Check OPENROUTER_API_KEY.');
-    } catch { setAiResult('AI request failed.'); }
-    finally { setAiLoading(false); }
-  };
-
-  const genDesc = async () => {
-    setAiLoading(true); setAiResult('');
-    try {
-      const res = await apiFetch('/api/ai/generate-description', { method: 'POST', body: JSON.stringify(fd) });
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content;
-      if (content) { setFd({ ...fd, description: content }); setAiResult('Description generated and applied!'); }
-      else { setAiResult('No response. Check OPENROUTER_API_KEY.'); }
-    } catch { setAiResult('AI request failed.'); }
-    finally { setAiLoading(false); }
-  };
-
   const renderStars = (r) => '★'.repeat(Math.round(r || 0)) + '☆'.repeat(5 - Math.round(r || 0));
 
   return (
@@ -133,7 +108,7 @@ export default function MyListings() {
       ) : (
         <div className="grid">
           {items.map(item => (
-            <div key={item.id} className="card" onClick={() => { setSel(item); setAiResult(''); loadPlans(item.id); setShowPlanForm(false); }}>
+            <div key={item.id} className="card" onClick={() => { setSel(item); loadPlans(item.id); setShowPlanForm(false); }}>
               <div className="card-top">
                 <h4>{item.title}</h4>
                 <span className={`badge ${item.availability_status === 'available' ? 'badge-green' : 'badge-red'}`}>{item.availability_status}</span>
@@ -255,12 +230,6 @@ export default function MyListings() {
                   <div className="fg form-full"><label>Rules</label><textarea value={fd.rules} onChange={e=>setFd({...fd,rules:e.target.value})} placeholder="Rental rules and conditions..." /></div>
                 </div>
 
-                <div style={{display:'flex',gap:'8px',marginTop:'1rem',flexWrap:'wrap'}}>
-                  <button type="button" className="btn btn-purple btn-sm" onClick={suggestPrice} disabled={aiLoading}>🤖 AI Price Suggestion</button>
-                  <button type="button" className="btn btn-t btn-sm" onClick={genDesc} disabled={aiLoading}>🤖 AI Generate Description</button>
-                </div>
-                {aiLoading && <div className="ai-load"><div className="spinner"></div>AI working...</div>}
-                {aiResult && <div className="ai-box" style={{marginTop:'.75rem'}}><ReactMarkdown>{aiResult}</ReactMarkdown></div>}
               </div>
               <div className="modal-f">
                 <button type="submit" className="btn btn-p btn-sm" disabled={saving}>{saving ? 'Saving...' : edit ? 'Update' : 'Create'}</button>

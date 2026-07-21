@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ReactMarkdown from 'react-markdown';
-import toast from 'react-hot-toast';
 
 const categories = [
   { key: 'Properties', icon: '🏠', color: '#3b82f6', desc: 'Apartments, houses, cabins, and vacation rentals for any duration.' },
@@ -18,9 +16,6 @@ export default function Dashboard() {
   const { apiFetch } = useAuth();
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
-  const [q, setQ] = useState('');
-  const [aiResult, setAiResult] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     apiFetch('/api/listings/stats/overview').then(r => r.json()).then(setStats).catch(() => {});
@@ -28,18 +23,6 @@ export default function Dashboard() {
   }, []);
 
   const catCount = (cat) => stats?.categories?.find(c => c.category === cat)?.count || 0;
-
-  const askAI = async (e) => {
-    e.preventDefault();
-    if (!q.trim()) return;
-    setAiLoading(true); setAiResult('');
-    try {
-      const res = await apiFetch('/api/ai/ask', { method: 'POST', body: JSON.stringify({ question: q }) });
-      const data = await res.json();
-      setAiResult(data.choices?.[0]?.message?.content || data.error?.message || 'No response. Check your OPENROUTER_API_KEY in .env');
-    } catch { toast.error('AI request failed'); setAiResult('Failed. Set OPENROUTER_API_KEY in .env'); }
-    finally { setAiLoading(false); }
-  };
 
   return (
     <div className="page">
@@ -212,16 +195,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="ai-section">
-        <h2>🤖 AI Rental Assistant</h2>
-        <p style={{color:'var(--text-2)',marginBottom:'1rem',fontSize:'.9rem'}}>Ask about pricing, best practices, market trends, or anything about renting.</p>
-        <form className="ai-form" onSubmit={askAI}>
-          <input value={q} onChange={e=>setQ(e.target.value)} placeholder="e.g. What's a fair daily rate for a DSLR camera in NYC?" />
-          <button type="submit" className="btn btn-purple" disabled={aiLoading}>{aiLoading ? 'Thinking...' : 'Ask AI'}</button>
-        </form>
-        {aiLoading && <div className="ai-load"><div className="spinner"></div>Analyzing...</div>}
-        {aiResult && <div className="ai-box"><ReactMarkdown>{aiResult}</ReactMarkdown></div>}
-      </div>
     </div>
   );
 }
