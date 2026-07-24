@@ -1,58 +1,60 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -a
+source "$project_dir/.env"
+set +a
+mode="${1:-start}"
 
-if [[ "${SKIP_PROJECT_ENV:-false}" != "true" && -f "$PROJECT_DIR/.env" ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source "$PROJECT_DIR/.env"
-  set +a
-fi
+case "$mode" in
+  check)
+    npm --prefix "$project_dir/backend" test
+    npm --prefix "$project_dir/frontend" run build
+    exit
+    ;;
+  migrate)
+    npm --prefix "$project_dir/backend" run migrate
+    exit
+    ;;
+  start) ;;
+  *) echo 'usage: ./start.sh check|migrate|start' >&2; exit 2 ;;
+esac
 
-BACKEND_PORT="${BACKEND_PORT:-3001}"
-FRONTEND_PORT="${FRONTEND_PORT:-3000}"
-BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
-FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
-
-if [[ -z "${JWT_SECRET:-}" || ${#JWT_SECRET} -lt 32 ]]; then
-  echo "JWT_SECRET must be configured with at least 32 characters." >&2
-  exit 1
-fi
-
-if [[ "${INSTALL_DEPENDENCIES:-0}" == "1" ]]; then
-  npm ci --prefix "$PROJECT_DIR/backend"
-  npm ci --prefix "$PROJECT_DIR/frontend"
-fi
-
-for dependency_dir in "$PROJECT_DIR/backend/node_modules" "$PROJECT_DIR/frontend/node_modules"; do
-  [[ -d "$dependency_dir" ]] || { echo "Dependencies are missing at $dependency_dir; run an explicit bootstrap step." >&2; exit 1; }
+: "${DATABASE_URL:?DATABASE_URL is required}"
+: "${JWT_SECRET:?JWT_SECRET is required}"
+: "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+: "${OPENROUTER_MODEL:?OPENROUTER_MODEL is required}"
+: "${OPENROUTER_BASE_URL:?OPENROUTER_BASE_URL is required}"
+api_port="${BACKEND_PORT:?BACKEND_PORT is required}"
+ui_port="${FRONTEND_PORT:?FRONTEND_PORT is required}"
+[[ "$api_port" != "$ui_port" ]] || { echo 'BACKEND_PORT and FRONTEND_PORT must differ' >&2; exit 1; }
+for port in "$api_port" "$ui_port"; do
+  ! lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1 || { echo "Port $port is occupied" >&2; exit 1; }
 done
 
-for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do
-  if lsof -tiTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-    echo "Port $port is occupied; refusing to terminate another process." >&2
-    exit 1
-  fi
-done
-
-if [[ "${RUN_MIGRATIONS:-0}" == "1" ]]; then
-  npm run migrate --prefix "$PROJECT_DIR/backend"
-else
-  echo "Migrations were not run. Use RUN_MIGRATIONS=1 after reviewing the target DATABASE_URL."
-fi
-
-(cd "$PROJECT_DIR/backend" && exec env BACKEND_HOST="$BACKEND_HOST" BACKEND_PORT="$BACKEND_PORT" node server.js) &
-backend_pid=$!
-(cd "$PROJECT_DIR/frontend" && exec ./node_modules/.bin/vite --host "$FRONTEND_HOST" --port "$FRONTEND_PORT") &
-frontend_pid=$!
+export BACKEND_HOST=127.0.0.1 CORS_ORIGINS="http://127.0.0.1:$ui_port"
+export VITE_BACKEND_URL="http://127.0.0.1:$api_port"
+npm --prefix "$project_dir/backend" run migrate
+npm --prefix "$project_dir/backend" run create-admin
 
 cleanup() {
-  kill "$backend_pid" "$frontend_pid" 2>/dev/null || true
-  wait "$backend_pid" "$frontend_pid" 2>/dev/null || true
+  trap - INT TERM EXIT
+  [[ -z "${ui_pid:-}" ]] || kill "$ui_pid" 2>/dev/null || true
+  [[ -z "${api_pid:-}" ]] || kill "$api_pid" 2>/dev/null || true
+  [[ -z "${ui_pid:-}" ]] || wait "$ui_pid" 2>/dev/null || true
+  [[ -z "${api_pid:-}" ]] || wait "$api_pid" 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM
+trap cleanup INT TERM EXIT
 
-echo "Frontend: http://$FRONTEND_HOST:$FRONTEND_PORT"
-echo "Backend:  http://$BACKEND_HOST:$BACKEND_PORT"
-wait
+(cd "$project_dir/backend" && exec node server.js) &
+api_pid=$!
+for ((attempt=0; attempt<120; attempt++)); do
+  curl -fsS "http://127.0.0.1:$api_port/api/health" >/dev/null 2>&1 && break
+  kill -0 "$api_pid" 2>/dev/null || { wait "$api_pid"; exit $?; }
+  sleep 0.5
+done
+curl -fsS "http://127.0.0.1:$api_port/api/health" >/dev/null
+(cd "$project_dir/frontend" && exec ./node_modules/.bin/vite --host 127.0.0.1 --port "$ui_port") &
+ui_pid=$!
+wait "$api_pid" "$ui_pid"

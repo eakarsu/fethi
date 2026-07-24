@@ -27,6 +27,7 @@ app.use('/api/webhooks', webhookRouter);
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/runtime-ai', require('./routes/runtimeAi'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/reviews', require('./routes/reviews'));
