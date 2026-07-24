@@ -2,6 +2,12 @@ const pool = require('./db');
 const bcrypt = require('bcryptjs');
 require('dotenv').config({ path: '../.env' });
 
+function requireDemoPassword() {
+  const password = process.env.DEMO_PASSWORD || process.env.SEED_DEMO_PASSWORD || process.env.DEMO_SEED_PASSWORD || '';
+  if (password.length < 12 || password.length > 1024) throw new Error('DEMO_PASSWORD must contain 12-1024 characters');
+  return password;
+}
+
 async function seed() {
   console.log('Seeding rental marketplace database...');
 
@@ -187,7 +193,7 @@ async function seed() {
   console.log('Tables created.');
 
   // Users
-  const pw = await bcrypt.hash('demo1234', 10);
+  const pw = await bcrypt.hash(requireDemoPassword(), 10);
   await pool.query(`INSERT INTO users (email, password, name, phone) VALUES
     ('demo@rental.com', $1, 'Demo User', '555-0100'),
     ('alice@rental.com', $1, 'Alice Johnson', '555-0101'),
@@ -601,7 +607,7 @@ async function seed() {
 
   console.log('\n========================================');
   console.log('  Seed complete!');
-  console.log('  Login: demo@rental.com / demo1234');
+  console.log('Demo login users provisioned from the local environment.');
   console.log('========================================');
   process.exit(0);
 }

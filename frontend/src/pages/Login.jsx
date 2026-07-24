@@ -12,7 +12,7 @@ export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
 
-  const autoFill = () => { setEmail('demo@rental.com'); setPassword('demo1234'); toast.success('Credentials filled!'); };
+  const autoFill = () => { setEmail(import.meta.env.VITE_DEMO_EMAIL || ''); setPassword(import.meta.env.VITE_DEMO_PASSWORD || ''); toast.success('Credentials filled!'); };
 
   const submit = async (e) => {
     e.preventDefault();
