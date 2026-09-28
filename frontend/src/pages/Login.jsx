@@ -46,7 +46,7 @@ export default function Login() {
             <button type="submit" className="btn btn-p" disabled={loading}>{loading ? 'Please wait...' : isReg ? 'Create Account' : 'Sign In'}</button>
           </form>
           <div className="divider">or</div>
-          <button className="autofill" onClick={autoFill}>Quick Login - Auto-fill Demo Credentials</button>
+          <button className="autofill" onClick={autoFill}>Quick Login - Auto Fill Demo Credentials</button>
           <div className="toggle-auth">
             <button onClick={()=>setIsReg(!isReg)}>{isReg ? 'Already have an account? Sign In' : 'Need an account? Register'}</button>
           </div>
