@@ -49,6 +49,23 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Use only the already configured demo account. Never expose its password to the browser.
+router.post('/demo-login', async (_req, res) => {
+  const email = process.env.DEMO_EMAIL;
+  const password = process.env.DEMO_PASSWORD;
+  if (!email || !password) return res.status(503).json({ error: 'Demo account credentials are not configured.' });
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    const user = result.rows[0];
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(503).json({ error: 'The configured demo account is unavailable.' });
+    }
+    return res.json({ user: { id: user.id, email: user.email, name: user.name, phone: user.phone, platformRole: user.platform_role }, token: issueToken(user) });
+  } catch (_err) {
+    return res.status(503).json({ error: 'Demo login is currently unavailable.' });
+  }
+});
+
 router.get('/me', authenticateToken, async (req, res) => {
   const result = await pool.query(
     'SELECT id, email, name, phone, platform_role FROM users WHERE id = $1',

@@ -1,6 +1,7 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import AIReport from '../components/AIReport.jsx';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
 
 const presets = [
@@ -21,6 +22,13 @@ export default function AIAssistant() {
   const [marketCity, setMarketCity] = useState('');
   const [marketResult, setMarketResult] = useState('');
   const [marketLoading, setMarketLoading] = useState(false);
+  const demoPresets = [
+    { name: 'Quick brief', question: 'How should I price a weekend camera rental in Boston while accounting for pickup time and equipment wear?', category: 'Electronics', city: 'Boston' },
+    { name: 'Team planning', question: 'What listing details and delivery checks would help a Chicago event lighting rental team handle weekend bookings?', category: 'Event & Party', city: 'Chicago' },
+    { name: 'Detailed review', question: 'Compare the risks, seasonal demand, and practical listing improvements for a winter cabin rental near Aspen.', category: 'Properties', city: 'Aspen' },
+  ].map(({ name, question, category, city }) => ({ name, fill: () => {
+    setQ(question); setMarketCat(category); setMarketCity(city); return { filled: 3 };
+  } }));
 
   const ask = async (question) => {
     const text = question || q;
@@ -47,7 +55,7 @@ export default function AIAssistant() {
   };
 
   return (
-    <div className="page">
+    <NativeAIControls busy={loading || marketLoading} context="fethi" presets={demoPresets}><div className="page">
       <div className="page-head"><h1>🤖 AI Rental Assistant</h1></div>
 
       <p style={{color:'var(--text-2)',marginBottom:'1.5rem'}}>Get expert advice on pricing, listings, market trends, and rental best practices. Powered by AI via OpenRouter.</p>
@@ -55,13 +63,13 @@ export default function AIAssistant() {
       {/* Quick Presets */}
       <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'1.5rem'}}>
         {presets.map((p, i) => (
-          <button key={i} className="btn btn-s btn-sm" onClick={() => ask(p.q)} disabled={loading}>{p.label}</button>
+          <button key={i} type="button" className="btn btn-s btn-sm" onClick={() => { setQ(p.q); setMarketCat(['Properties', 'Electronics', 'Vehicles', 'Tools & Equipment', 'Sports & Outdoor', 'Event & Party'][i]); setMarketCity(['New York', 'Boston', 'Chicago', 'Seattle', 'Denver', 'Atlanta'][i]); }} disabled={loading}>{p.label}</button>
         ))}
       </div>
 
       {/* Ask Form */}
       <form className="ai-form" onSubmit={e => { e.preventDefault(); ask(); }} style={{marginBottom:'2rem'}}>
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Ask anything about renting, pricing, marketplace strategies..." />
+        <input data-ai-field={"q"} value={q} onChange={e => setQ(e.target.value)} placeholder="Ask anything about renting, pricing, marketplace strategies..." />
         <button type="submit" className="btn btn-purple" disabled={loading}>{loading ? 'Thinking...' : 'Ask AI'}</button>
       </form>
 
@@ -72,16 +80,16 @@ export default function AIAssistant() {
         <h2>📊 Market Insights</h2>
         <p style={{color:'var(--text-2)',marginBottom:'1rem',fontSize:'.88rem'}}>Get AI-generated market analysis for a specific category and location.</p>
         <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'1rem'}}>
-          <select value={marketCat} onChange={e => setMarketCat(e.target.value)} style={{padding:'8px 12px',background:'var(--bg-0)',border:'1px solid var(--border)',borderRadius:'var(--radius-s)',color:'var(--text-0)',fontFamily:'inherit'}}>
+          <select data-ai-field={"marketCat"} value={marketCat} onChange={e => setMarketCat(e.target.value)} style={{padding:'8px 12px',background:'var(--bg-0)',border:'1px solid var(--border)',borderRadius:'var(--radius-s)',color:'var(--text-0)',fontFamily:'inherit'}}>
             {['Properties','Vehicles','Electronics','Tools & Equipment','Sports & Outdoor','Event & Party'].map(c => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <input value={marketCity} onChange={e => setMarketCity(e.target.value)} placeholder="City (optional)" style={{padding:'8px 12px',background:'var(--bg-0)',border:'1px solid var(--border)',borderRadius:'var(--radius-s)',color:'var(--text-0)',fontFamily:'inherit',flex:1,minWidth:'150px'}} />
+          <input data-ai-field={"marketCity"} value={marketCity} onChange={e => setMarketCity(e.target.value)} placeholder="City (optional)" style={{padding:'8px 12px',background:'var(--bg-0)',border:'1px solid var(--border)',borderRadius:'var(--radius-s)',color:'var(--text-0)',fontFamily:'inherit',flex:1,minWidth:'150px'}} />
           <button className="btn btn-t btn-sm" onClick={getMarketInsights} disabled={marketLoading}>{marketLoading ? 'Analyzing...' : 'Get Insights'}</button>
         </div>
         {marketLoading && <div className="ai-load"><div className="spinner"></div>Analyzing market...</div>}
-        {marketResult && <div className="ai-box"><ReactMarkdown>{marketResult}</ReactMarkdown></div>}
+        {marketResult && <AIReport response={marketResult} title="Market insights" />}
       </div>
 
       {/* Results History */}
@@ -94,11 +102,11 @@ export default function AIAssistant() {
                 <span style={{color:'var(--text-3)',fontSize:'.75rem'}}>{r.time}</span>
                 <p style={{color:'var(--text-0)',fontWeight:600,marginTop:'.25rem'}}>{r.question}</p>
               </div>
-              <div className="ai-box"><ReactMarkdown>{r.answer}</ReactMarkdown></div>
+              <AIReport response={r.answer} title="Assistant answer" />
             </div>
           ))}
         </div>
       )}
-    </div>
+    </div></NativeAIControls>
   );
 }

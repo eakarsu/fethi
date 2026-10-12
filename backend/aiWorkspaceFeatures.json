@@ -1,0 +1,72 @@
+[
+  {
+    "name": "AiBackgroundCheckHostVettingPage",
+    "id": "gap-ai-fethi/ai-background-check-host-vetting",
+    "title": "AI background-check / host vetting",
+    "description": "Prepare a professional advisory report for ai background-check / host vetting using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "AiInquiryAutoResponderPage",
+    "id": "gap-ai-fethi/ai-inquiry-auto-responder",
+    "title": "AI inquiry auto-responder",
+    "description": "Prepare a professional advisory report for ai inquiry auto-responder using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "AiPhotoQualityScoringForListingsPage",
+    "id": "gap-ai-fethi/ai-photo-quality-scoring-for-listings",
+    "title": "AI photo-quality scoring for listings",
+    "description": "Prepare a professional advisory report for ai photo-quality scoring for listings using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "CalendarSyncWithExternalSystemsPage",
+    "id": "gap-nonai-fethi/calendar-sync-with-external-systems",
+    "title": "Calendar sync with external systems",
+    "description": "Prepare a professional advisory report for calendar sync with external systems using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "DisputeResolutionWorkflowPage",
+    "id": "gap-nonai-fethi/dispute-resolution-workflow",
+    "title": "Dispute resolution workflow",
+    "description": "Prepare a professional advisory report for dispute resolution workflow using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "HostInsuranceDamageProtectionPage",
+    "id": "gap-nonai-fethi/host-insurance-damage-protection",
+    "title": "Host insurance / damage protection",
+    "description": "Prepare a professional advisory report for host insurance / damage protection using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "IdVerificationModulePage",
+    "id": "gap-nonai-fethi/id-verification-module",
+    "title": "ID verification module",
+    "description": "Prepare a professional advisory report for id verification module using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "MultiLanguageSupportPage",
+    "id": "gap-nonai-fethi/multi-language-support",
+    "title": "Multi-language support",
+    "description": "Prepare a professional advisory report for multi-language support using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "PaymentProcessingEscrowPayoutsPage",
+    "id": "gap-nonai-fethi/payment-processing-escrow-payouts",
+    "title": "Payment processing (escrow, payouts)",
+    "description": "Prepare a professional advisory report for payment processing (escrow, payouts) using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  },
+  {
+    "name": "TaxDocumentGenerationForHostsPage",
+    "id": "gap-nonai-fethi/tax-document-generation-for-hosts",
+    "title": "Tax document generation for hosts",
+    "description": "Prepare a professional advisory report for tax document generation for hosts using the brief and evidence you provide. Review the findings, assumptions, and action plan before applying changes.",
+    "samples": []
+  }
+]

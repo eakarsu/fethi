@@ -58,7 +58,11 @@ export default function Browse() {
 
   // Load user's favorites
   useEffect(() => {
-    apiFetch('/api/favorites').then(r => r.json()).then(favs => setFavIds(new Set(favs.map(f => f.listing_id)))).catch(() => {});
+    apiFetch('/api/favorites').then(r => r.json()).then(favs => {
+      const rows = Array.isArray(favs) ? favs : favs?.data;
+      if (!Array.isArray(rows)) throw new Error('Favorites response did not contain rows');
+      setFavIds(new Set(rows.map(f => f.listing_id)));
+    }).catch(() => {});
   }, []);
 
   // Build filter params
@@ -98,14 +102,16 @@ export default function Browse() {
     try {
       const params = getFilterParams();
       const res = await apiFetch(`/api/listings?${params}`);
-      const data = await res.json();
-      setItems(data);
-      if (data.length > 0) {
-        loadBulkReviews(data.map(i => i.id));
+      const payload = await res.json();
+      const rows = Array.isArray(payload) ? payload : payload?.data;
+      if (!Array.isArray(rows)) throw new Error('Listings response did not contain rows');
+      setItems(rows);
+      if (rows.length > 0) {
+        loadBulkReviews(rows.map(i => i.id));
       } else {
         setCardReviews({});
       }
-    } catch { toast.error('Failed to load listings'); }
+    } catch { setItems([]); setCardReviews({}); toast.error('Failed to load listings'); }
   }, [getFilterParams]);
 
   const loadBulkReviews = async (ids) => {
@@ -113,6 +119,7 @@ export default function Browse() {
       const res = await apiFetch(`/api/reviews/bulk?ids=${ids.join(',')}`);
       const allRevs = await res.json();
       const grouped = {};
+      if (!Array.isArray(allRevs)) throw new Error('Reviews response did not contain rows');
       allRevs.forEach(r => { if (!grouped[r.listing_id]) grouped[r.listing_id] = []; grouped[r.listing_id].push(r); });
       setCardReviews(grouped);
     } catch { setCardReviews({}); }

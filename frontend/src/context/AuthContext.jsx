@@ -33,6 +33,10 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers },
     });
     if (res.status === 401 || res.status === 403) { logout(); throw new Error('Session expired'); }
+    if (!res.ok) {
+      const body = await res.clone().json().catch(() => ({}));
+      throw new Error(body.error || body.message || `Request failed (${res.status})`);
+    }
     return res;
   };
 

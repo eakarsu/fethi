@@ -4,8 +4,15 @@ const { authenticateToken } = require('../middleware/auth');
 require('dotenv').config({ path: '../.env' });
 const router = express.Router();
 
+function unavailable(reason) {
+  return { available: false, choices: [{ message: { content: `AI provider unavailable. ${reason} No report was generated; review your inputs and try again when the provider is available.` } }] };
+}
+
 function callOpenRouter(prompt) {
-  return new Promise((resolve, reject) => {
+  if (!process.env.OPENROUTER_API_KEY || /your-openrouter|replace|example-key/i.test(process.env.OPENROUTER_API_KEY)) {
+    return Promise.resolve(unavailable('The server is missing a valid OpenRouter API key.'));
+  }
+  return new Promise((resolve) => {
     const data = JSON.stringify({
       model: process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5',
       messages: [{ role: 'user', content: prompt }],
@@ -26,14 +33,17 @@ function callOpenRouter(prompt) {
       let body = '';
       res.on('data', (chunk) => { body += chunk; });
       res.on('end', () => {
-        try { resolve(JSON.parse(body)); }
-        catch (e) { reject(new Error('Failed to parse response')); }
+        try {
+          const parsed = JSON.parse(body);
+          resolve(res.statusCode >= 400 || parsed.error || !parsed.choices?.[0]?.message?.content
+            ? unavailable('OpenRouter did not return a usable response.') : parsed);
+        } catch (_) { resolve(unavailable('OpenRouter returned an unreadable response.')); }
       });
     });
-    req.on('error', reject);
+    req.on('error', () => resolve(unavailable('OpenRouter could not be reached.')));
     req.write(data);
     req.end();
-  });
+  }).catch(() => unavailable('OpenRouter could not be reached.'));
 }
 
 // AI: Generate listing description

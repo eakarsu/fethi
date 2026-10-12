@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function Login() {
+  const [demoLoginBusy, setDemoLoginBusy] = useState(false);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -11,8 +13,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const nav = useNavigate();
-
-  const autoFill = () => { setEmail(import.meta.env.VITE_DEMO_EMAIL || ''); setPassword(import.meta.env.VITE_DEMO_PASSWORD || ''); toast.success('Credentials filled!'); };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -28,6 +28,19 @@ export default function Login() {
       nav('/');
     } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
+  };
+
+  const demoLogin = async () => {
+    if (demoLoginBusy) return;
+    setDemoLoginBusy(true);
+    try {
+      const res = await fetch('/api/auth/demo-login', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Demo login unavailable.');
+      login(data.user, data.token);
+      nav('/');
+    } catch (err) { toast.error(err.message); }
+    finally { setDemoLoginBusy(false); }
   };
 
   return (
@@ -46,7 +59,7 @@ export default function Login() {
             <button type="submit" className="btn btn-p" disabled={loading}>{loading ? 'Please wait...' : isReg ? 'Create Account' : 'Sign In'}</button>
           </form>
           <div className="divider">or</div>
-          <button className="autofill" onClick={autoFill}>Quick Login - Auto Fill Demo Credentials</button>
+          {!isReg && <button type="button" disabled={demoLoginBusy || loading} className="autofill" onClick={demoLogin}>{demoLoginBusy ? 'Signing in…' : 'Log in as demo'}</button>}
           <div className="toggle-auth">
             <button onClick={()=>setIsReg(!isReg)}>{isReg ? 'Already have an account? Sign In' : 'Need an account? Register'}</button>
           </div>

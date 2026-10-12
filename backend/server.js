@@ -27,6 +27,7 @@ app.use('/api/webhooks', webhookRouter);
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/ai', require('./routes/ai'));
 app.use('/api/runtime-ai', require('./routes/runtimeAi'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/bookings', require('./routes/bookings'));
@@ -51,6 +52,14 @@ app.get('/api/health', async (req, res) => {
 // // === Custom Views feature mount (must precede any 404 handler) ===
 app.use('/api/custom-views', require('./routes/customViews'));
 
+
+// Advisory AI reports only; native execution and approval routes stay unchanged.
+const aiWorkspaceSupport = require("./aiWorkspaceAdapters.cjs");
+const aiWorkspaceDatabase = require("./db.js");
+app.use('/api/report-workspace', require("./aiWorkspace.cjs").createAIWorkspaceRouter({
+  pool: aiWorkspaceDatabase, authenticateToken: require("./middleware/auth.js").authenticateToken,
+  aiRateLimiter: aiWorkspaceSupport.createWorkspaceLimiter(), features: require("./aiWorkspaceFeatures.json"),
+}));
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((error, req, res, next) => {
   console.error(error.message);

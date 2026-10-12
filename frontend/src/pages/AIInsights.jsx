@@ -1,3 +1,5 @@
+import NativeAIControls from "../components/NativeAIControls.jsx";
+import AIReport from '../components/AIReport.jsx';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -40,6 +42,63 @@ export default function AIInsights() {
   const [result, setResult] = useState(null);
 
   const activeTab = tabs.find((t) => t.value === tab);
+  const exampleNames = ['Quick brief', 'Team planning', 'Detailed review'];
+  const examples = [
+    {
+      listing: 'Illustrative camera rental in Boston: $65 per day, weekend availability, pickup near transit. No verified listing record is selected.',
+      inquiries: [{ date: '2026-10-08', status: 'new', topic: 'weekend availability' }],
+      market: { city: 'Boston', season: 'autumn', demand: 'illustrative moderate demand' },
+      period: 'next 30 days',
+      host: 'Illustrative host with two years of rental experience and a clear pickup policy. No verified host record is selected.',
+      bookings: [{ date: '2026-10-04', completed: true }],
+      reviews: [{ rating: 5, text: 'Clear pickup instructions and responsive communication.' }],
+      disputes: [{ type: 'late return', resolved: true }],
+      inquiry: 'Hi, is the camera available next weekend, and where would pickup be?',
+      replyListing: 'Illustrative camera rental in Boston with weekend pickup near transit.',
+      style: 'Friendly and concise',
+    },
+    {
+      listing: 'Illustrative event lighting package in Chicago: $175 per day, delivery available, setup requirements to confirm. No verified listing record is selected.',
+      inquiries: [{ date: '2026-10-07', status: 'new', topic: 'delivery and setup' }],
+      market: { city: 'Chicago', season: 'autumn', demand: 'illustrative event demand' },
+      period: 'next 60 days',
+      host: 'Illustrative event equipment host with a documented inspection checklist. No verified host record is selected.',
+      bookings: [{ date: '2026-10-02', completed: true }],
+      reviews: [{ rating: 4, text: 'Equipment worked well; delivery timing needs clearer confirmation.' }],
+      disputes: [{ type: 'delivery timing', resolved: true }],
+      inquiry: 'Can the lighting kit be delivered to our venue, and is setup included?',
+      replyListing: 'Illustrative lighting package in Chicago; delivery and setup terms need confirmation.',
+      style: 'Professional and collaborative',
+    },
+    {
+      listing: 'Illustrative mountain cabin in Colorado: $180 per day, two bedrooms, winter access limitations to verify. No verified listing record is selected.',
+      inquiries: [{ date: '2026-10-06', status: 'new', topic: 'winter access' }],
+      market: { city: 'Aspen', season: 'winter', demand: 'illustrative seasonal demand' },
+      period: 'next 90 days',
+      host: 'Illustrative property host with seasonal maintenance and guest communication procedures. No verified host record is selected.',
+      bookings: [{ date: '2026-09-28', completed: true }],
+      reviews: [{ rating: 5, text: 'Clean property and helpful arrival instructions.' }],
+      disputes: [{ type: 'weather cancellation', resolved: false }],
+      inquiry: 'Is the cabin accessible during snow, and what is the cancellation policy?',
+      replyListing: 'Illustrative mountain cabin in Colorado; winter access and cancellation terms need confirmation.',
+      style: 'Detailed and evidence based',
+    },
+  ];
+  const nativePresets = exampleNames.map((name, index) => ({ name, fill: () => {
+    const example = examples[index];
+    if (tab === 'booking') {
+      setListing(example.listing); setRecentInquiries(JSON.stringify(example.inquiries, null, 2));
+      setMarket(JSON.stringify(example.market, null, 2)); setPeriod(example.period);
+      return { filled: 4 };
+    }
+    if (tab === 'reliability') {
+      setHost(example.host); setRecentBookings(JSON.stringify(example.bookings, null, 2));
+      setReviews(JSON.stringify(example.reviews, null, 2)); setDisputes(JSON.stringify(example.disputes, null, 2));
+      return { filled: 4 };
+    }
+    setInquiry(example.inquiry); setRespondListing(example.replyListing); setHostStyle(example.style);
+    return { filled: 3 };
+  } }));
 
   const reset = () => {
     setError('');
@@ -91,7 +150,7 @@ export default function AIInsights() {
           setError('Inquiry text is required.');
           return;
         }
-        payload = { inquiry: inquiry.trim() };
+        payload = { inquiry: { message: inquiry.trim() } };
         if (respondListing.trim()) {
           payload.listing = respondListing.trim().startsWith('{')
             ? safeJSONParse(respondListing)
@@ -125,7 +184,7 @@ export default function AIInsights() {
   };
 
   return (
-    <div className="page">
+    <NativeAIControls busy={loading} context="fethi" presets={nativePresets}><div className="page">
       <div className="page-head">
         <h1>🧠 AI Insights</h1>
       </div>
@@ -268,27 +327,10 @@ export default function AIInsights() {
           {!loading && !result && !error && (
             <p style={{ color: 'var(--text-3)', fontSize: '.88rem' }}>Submit the form to see AI-generated insights.</p>
           )}
-          {!loading && result && (
-            <pre
-              style={{
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                fontSize: '.78rem',
-                background: 'var(--bg-1)',
-                padding: '.85rem',
-                borderRadius: 'var(--radius-s)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-1)',
-                maxHeight: '600px',
-                overflowY: 'auto',
-              }}
-            >
-              {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-            </pre>
-          )}
+          {!loading && result && <AIReport response={result} title={activeTab.label} />}
         </div>
       </div>
-    </div>
+    </div></NativeAIControls>
   );
 }
 
@@ -301,7 +343,7 @@ function Field({ label, value, onChange, disabled, placeholder, rows, required }
         {required && <span style={{ color: 'var(--red)' }}> *</span>}
       </label>
       {isMultiline ? (
-        <textarea
+        <textarea data-ai-field={typeof label === 'string' ? label.replace(/\([^)]*\)/g, '').trim().toLowerCase().replace(/\s+/g, '_') : 'value'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
@@ -320,7 +362,7 @@ function Field({ label, value, onChange, disabled, placeholder, rows, required }
           }}
         />
       ) : (
-        <input
+        <input data-ai-field={typeof label === 'string' ? label.replace(/\([^)]*\)/g, '').trim().toLowerCase().replace(/\s+/g, '_') : 'value'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
